@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "lsfm"
+version = "0.1.0"
+description = ""
+authors = ["Kenneth V. Domingo <hello@kvdomingo.xyz>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Flask = {extras = ["async"], version = "^2.1.1"}
+gunicorn = {extras = ["gevent"], version = "^20.1.0"}
+ffmpeg = "^1.4"
+python-dotenv = "^0.20.0"
+tqdm = "^4.64.0"
+loguru = "^0.6.0"
+
+[tool.poetry.dev-dependencies]
+black = "^22.3.0"
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

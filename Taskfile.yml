@@ -1,0 +1,33 @@
+version: '3'
+
+env:
+  NAME: lsfm
+
+tasks:
+  default:
+    env:
+      VERSION:
+        sh: git show --format="%aI %h" --no-patch
+    desc: Build and start containers
+    cmds:
+      - docker compose -p $NAME up -d --build --remove-orphans
+
+  restart:
+    desc: Restart all containers
+    cmds:
+      - docker compose -p $NAME restart {{.CLI_ARGS}}
+
+  logs:
+    desc: Show Docker logs
+    cmds:
+      - docker compose -p $NAME logs --follow {{.CLI_ARGS}}
+
+  shutdown:
+    desc: Stop all containers
+    cmds:
+      - docker compose -p $NAME stop
+
+  clean:
+    desc: Stop and remove all containers
+    cmds:
+      - docker compose -p $NAME down -v --remove-orphans
