@@ -27,3 +27,5 @@ LESSERAFIM.html
 LESSERAFIM_files/
 .idea/
 gs-cors.json
+
+.vercel
