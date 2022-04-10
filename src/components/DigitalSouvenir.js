@@ -38,7 +38,8 @@ const audioText = ["intro", "killing_part", "message_kr_1", "message_kr_2", "mes
 function DigitalSouvenir() {
   const { member } = useParams();
   const [page, setPage] = useState(1);
-  const [openNotification, setOpenNotification] = useState(false);
+  const [openProgressNotification, setOpenProgressNotification] = useState(false);
+  const [openErrorNotification, setOpenErrorNotification] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [selVisual, setSelVisual] = useState(null);
   const [selText, setSelText] = useState(null);
@@ -104,6 +105,7 @@ function DigitalSouvenir() {
 
   async function handleDownload() {
     setLoading(true);
+    setOpenProgressNotification(true);
     await ffmpeg.load();
     let data;
     ffmpeg.FS("writeFile", selVisual, await fetchFile(`${GS_URL}/${member}/${selVisual}`));
@@ -121,7 +123,7 @@ function DigitalSouvenir() {
         "-filter_complex",
         "[0][1] overlay=0:0",
         "-c:v",
-        selVisual.endsWith("mp4") ? "copy" : "libx264",
+        "libx264",
         ...(selVisual.endsWith("mp4") ? [] : ["-tune", "stillimage"]),
         "-c:a",
         "copy",
@@ -131,12 +133,14 @@ function DigitalSouvenir() {
         "out.mp4",
       );
       data = ffmpeg.FS("readFile", "out.mp4");
+      setOpenProgressNotification(false);
       setLoading(false);
       saveAs(URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })), `${member}-digital-souvenir.mp4`);
     } catch (err) {
       console.error(err);
       setLoading(false);
-      setOpenNotification(true);
+      setOpenProgressNotification(false);
+      setOpenErrorNotification(true);
     }
   }
 
@@ -362,7 +366,7 @@ function DigitalSouvenir() {
                     disabled={loading}
                     sx={{ height: "100%" }}
                   >
-                    {loading ? <CircularProgress size="1.5em" disableShrink /> : "Download"}
+                    Download
                   </Button>
                 </Grid>
               )}
@@ -370,13 +374,21 @@ function DigitalSouvenir() {
           </Grid>
         </Grid>
       </Container>
+      <Snackbar open={openProgressNotification} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert severity="info" icon={false}>
+          <Grid container alignContent="center">
+            <CircularProgress sx={{ mr: 1 }} size="1.5em" disableShrink />
+            Processing media. Please wait...
+          </Grid>
+        </Alert>
+      </Snackbar>
       <Snackbar
-        open={openNotification}
+        open={openErrorNotification}
         autoHideDuration={5000}
-        onClose={() => setOpenNotification(false)}
+        onClose={() => setOpenErrorNotification(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert onClose={() => setOpenNotification(false)} severity="error">
+        <Alert onClose={() => setOpenErrorNotification(false)} severity="error">
           An error occurred. Please try again later.
         </Alert>
       </Snackbar>
