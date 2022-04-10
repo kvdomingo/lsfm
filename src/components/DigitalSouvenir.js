@@ -121,7 +121,7 @@ function DigitalSouvenir() {
         "-filter_complex",
         "[0][1] overlay=0:0",
         "-c:v",
-        "libx264",
+        selVisual.endsWith("mp4") ? "copy" : "libx264",
         ...(selVisual.endsWith("mp4") ? [] : ["-tune", "stillimage"]),
         "-c:a",
         "copy",
