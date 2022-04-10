@@ -1,9 +1,11 @@
 import "./App.css";
 import { AppBar, Container, Grid, Toolbar } from "@mui/material";
 import { BrowserRouter as Router, Link, Routes, Route } from "react-router-dom";
+import ReactGA from "react-ga4";
 import DigitalSouvenir from "./components/DigitalSouvenir";
+import GAUtil from "./components/GAUtil";
 
-const { PUBLIC_URL } = process.env;
+const { NODE_ENV, PUBLIC_URL } = process.env;
 
 const GS_URL = process.env.REACT_APP_GS_URL;
 
@@ -26,7 +28,16 @@ function CardDeck() {
               },
             }}
           >
-            <Link to={`/digitalsouvenir/${member}`}>
+            <Link
+              to={`/digitalsouvenir/${member}`}
+              onClick={() =>
+                ReactGA.event({
+                  category: "card",
+                  action: "click",
+                  label: member,
+                })
+              }
+            >
               <img
                 src={`${GS_URL}/${member}/card.png`}
                 alt={`${member} card`}
@@ -47,6 +58,7 @@ function CardDeck() {
 function App() {
   return (
     <Router>
+      {NODE_ENV === "production" && <GAUtil />}
       <AppBar color="inherit" sx={{ boxShadow: "none" }}>
         <Container>
           <Toolbar disableGutters sx={{ justifyContent: "center" }}>

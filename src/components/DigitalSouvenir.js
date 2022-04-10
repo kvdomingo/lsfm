@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import ReactGA from "react-ga4";
 import {
   Alert,
   Button,
@@ -133,6 +134,12 @@ function DigitalSouvenir() {
         "out.mp4",
       );
       data = ffmpeg.FS("readFile", "out.mp4");
+      ReactGA.event({
+        category: "souvenir",
+        action: "download",
+        label: `${member} ${selVisual} ${selText} ${selAudio}`,
+        value: "success",
+      });
       setOpenProgressNotification(false);
       setLoading(false);
       saveAs(URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })), `${member}-digital-souvenir.mp4`);
@@ -141,6 +148,12 @@ function DigitalSouvenir() {
       setLoading(false);
       setOpenProgressNotification(false);
       setOpenErrorNotification(true);
+      ReactGA.event({
+        category: "souvenir",
+        action: "download",
+        label: `${member} ${selVisual} ${selText} ${selAudio}`,
+        value: "fail",
+      });
     }
   }
 
