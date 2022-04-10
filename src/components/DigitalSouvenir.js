@@ -1,6 +1,20 @@
-import { useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Button, Card, CardContent, CircularProgress, Container, Divider, Grid, Typography } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Container,
+  Divider,
+  Grid,
+  IconButton,
+  Typography,
+} from "@mui/material";
+import {
+  PlayCircleOutline as PlayCircleOutlineIcon,
+  PauseCircleOutline as PauseCircleOutlineIcon,
+} from "@mui/icons-material";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { saveAs } from "file-saver";
 
@@ -22,11 +36,13 @@ const audioText = ["intro", "killing_part", "message_kr_1", "message_kr_2", "mes
 function DigitalSouvenir() {
   const { member } = useParams();
   const [page, setPage] = useState(1);
+  const [audioPlaying, setAudioPlaying] = useState(false);
   const [selVisual, setSelVisual] = useState(null);
   const [selText, setSelText] = useState(null);
   const [selAudio, setSelAudio] = useState(null);
   const [output, setOutput] = useState(null);
   const [loading, setLoading] = useState(false);
+  const audioRef = useRef(null);
   const ffmpeg = createFFmpeg({ log: true, corePath: `${PUBLIC_URL}/ffmpeg-core/ffmpeg-core.js` });
 
   const visual = Array(10)
@@ -49,97 +65,141 @@ function DigitalSouvenir() {
     .fill("")
     .map((_, i) => `auditory_${i}_${audioText[i]}.mp3`);
 
+  useEffect(() => {
+    if (!!audioRef.current) {
+      audioRef.current.addEventListener("ended", () => {
+        setAudioPlaying(false);
+      });
+      audioRef.current.addEventListener("playing", () => {
+        setAudioPlaying(true);
+      });
+      audioRef.current.addEventListener("pause", () => {
+        setAudioPlaying(false);
+      });
+    }
+    return () => {
+      if (!!audioRef.current) {
+        audioRef.current.removeEventListener("ended", () => {});
+        audioRef.current.removeEventListener("pause", () => {});
+        audioRef.current.removeEventListener("playing", () => {});
+      }
+    };
+  }, [audioRef]);
+
   function handleSelectVisual(visual) {
     setSelVisual(visual);
     setSelText(null);
     setSelAudio(null);
+    setAudioPlaying(false);
     setOutput(visual);
+    audioRef.current = null;
   }
 
   async function handleAddText(text) {
-    const delay = setTimeout(() => setLoading(true), 1000);
     setSelText(text);
-    await ffmpeg.load();
-    ffmpeg.FS("writeFile", selVisual, await fetchFile(`${GS_URL}/${member}/${selVisual}`));
-    ffmpeg.FS("writeFile", text, await fetchFile(`${GS_URL}/${member}/${text}`));
-    await ffmpeg.run(
-      "-i",
-      selVisual,
-      "-i",
-      text,
-      "-filter_complex",
-      `[0${selVisual.endsWith("mp4") ? ":v" : ""}][1] overlay=0:0`,
-      "-c:v",
-      selVisual.endsWith("mp4") ? "libx264" : "png",
-      "-pix_fmt",
-      "rgba",
-      `${selVisual}_${text}`,
-    );
-    const data = ffmpeg.FS("readFile", `${selVisual}_${text}`);
-    const type = selVisual.endsWith("mp4") ? "video/mp4" : "image/png";
-    setOutput(URL.createObjectURL(new Blob([data.buffer], { type })));
-    clearTimeout(delay);
-    setLoading(false);
   }
 
   async function handleAddAudio(audio) {
+    if (!!audioRef.current) audioRef.current.pause();
     setSelAudio(audio);
-    const delay = setTimeout(() => setLoading(true), 1000);
-    await ffmpeg.load();
-    ffmpeg.FS("writeFile", `${selVisual}_${selText}`, await fetchFile(output));
-    ffmpeg.FS("writeFile", audio, await fetchFile(`${GS_URL}/${member}/${audio}`));
-    await ffmpeg.run(
-      ...(selVisual.endsWith("mp4") ? [] : ["-loop", "1"]),
-      "-i",
-      `${selVisual}_${selText}`,
-      "-i",
-      audio,
-      "-c:v",
-      selVisual.endsWith("mp4") ? "copy" : "libx264",
-      ...(selVisual.endsWith("mp4") ? [] : ["-tune", "stillimage"]),
-      "-c:a",
-      "copy",
-      ...(selVisual.endsWith("mp4") ? [] : ["-pix_fmt", "yuv420p"]),
-      "-shortest",
-      `${selVisual}_${selText}_${audio}.mp4`,
-    );
-    const data = ffmpeg.FS("readFile", `${selVisual}_${selText}_${audio}.mp4`);
-    setOutput(URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })));
-    clearTimeout(delay);
-    setLoading(false);
+    setAudioPlaying(false);
   }
 
   async function handleDownload() {
-    saveAs(output, `${member}-digital-souvenir.mp4`);
+    setLoading(true);
+    await ffmpeg.load();
+    ffmpeg.FS("writeFile", selVisual, await fetchFile(`${GS_URL}/${member}/${selVisual}`));
+    ffmpeg.FS("writeFile", selText, await fetchFile(`${GS_URL}/${member}/${selText}`));
+    ffmpeg.FS("writeFile", selAudio, await fetchFile(`${GS_URL}/${member}/${selAudio}`));
+    await ffmpeg.run(
+      ...(selVisual.endsWith("mp4") ? ["-stream_loop", "-1"] : ["-loop", "1"]),
+      "-i",
+      selVisual,
+      "-i",
+      selText,
+      "-i",
+      selAudio,
+      "-filter_complex",
+      "[0][1] overlay=0:0",
+      "-c:v",
+      "libx264",
+      ...(selVisual.endsWith("mp4") ? [] : ["-tune", "stillimage"]),
+      "-c:a",
+      "copy",
+      "-map",
+      "2:a",
+      "-shortest",
+      "out.mp4",
+    );
+    const data = ffmpeg.FS("readFile", "out.mp4");
+    setLoading(false);
+    saveAs(URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })), `${member}-digital-souvenir.mp4`);
   }
 
   return (
-    <Container sx={{ minHeight: "100vh", py: "2em" }} maxWidth="xl">
+    <Container sx={{ minHeight: "100vh", mt: 6, py: "2em" }} maxWidth="xl">
       <Grid container>
         <Grid item md={4}>
-          {loading ? (
-            <Grid container alignContent="center" justifyContent="center">
-              <CircularProgress size="2em" />
-            </Grid>
-          ) : output == null ? null : output.endsWith("mp4") || selAudio != null ? (
-            <video
-              autoPlay
-              loop={!selAudio}
-              playsInline
-              muted={!selAudio}
-              controls={!!selAudio}
-              style={{ width: "100%", borderRadius: 6 }}
-              src={output.startsWith("blob") ? output : `${GS_URL}/${member}/${output}`}
-              crossOrigin="anonymous"
-            />
-          ) : (
-            <img
-              src={output.startsWith("blob") ? output : `${GS_URL}/${member}/${output}`}
-              style={{ width: "100%", borderRadius: 6 }}
-              alt={`${member} ${output}`}
-              crossOrigin="anonymous"
-            />
-          )}
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              height: "max-content",
+            }}
+          >
+            {!selVisual ? null : output.endsWith("mp4") ? (
+              <video
+                autoPlay
+                loop
+                playsInline
+                muted
+                style={{ width: "100%", borderRadius: 6 }}
+                src={`${GS_URL}/${member}/${selVisual}`}
+                crossOrigin="anonymous"
+              />
+            ) : (
+              <img
+                src={`${GS_URL}/${member}/${selVisual}`}
+                style={{ width: "100%", borderRadius: 6 }}
+                alt={`${member} ${output}`}
+                crossOrigin="anonymous"
+              />
+            )}
+            {!!selText && (
+              <img
+                src={`${GS_URL}/${member}/${selText}`}
+                alt={`${member} ${selText}`}
+                crossOrigin="anonymous"
+                style={{
+                  width: "100%",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                }}
+              />
+            )}
+            {!!selAudio && !!audioRef && (
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                }}
+                color="default"
+                onClick={() => {
+                  if (audioPlaying) audioRef.current.pause();
+                  else audioRef.current.play();
+                  setAudioPlaying(playing => !playing);
+                }}
+              >
+                {audioPlaying ? (
+                  <PauseCircleOutlineIcon sx={{ fontSize: 100 }} />
+                ) : (
+                  <PlayCircleOutlineIcon sx={{ fontSize: 100 }} />
+                )}
+              </IconButton>
+            )}
+          </div>
         </Grid>
         <Grid item container md={8} alignContent="flex-start" px={2}>
           {page === 1 && (
@@ -241,21 +301,30 @@ function DigitalSouvenir() {
               </Container>
               <Grid container>
                 {audio.map((au, i) => (
-                  <Grid item md key={au} sx={{ p: 1 }}>
+                  <Grid item md key={au}>
                     <Card
                       elevation={0}
                       sx={{
-                        border: "1px solid",
+                        m: 1,
+                        border: "2px solid",
                         borderColor: selAudio === au ? "primary.main" : "rgba(0, 0, 0, 0.12)",
                         cursor: "pointer",
+                        height: "100%",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textAlign: "center",
+                        display: "flex",
                       }}
                       onClick={async () => await handleAddAudio(au)}
                     >
-                      <CardContent>
-                        <Typography variant="body1">{audioText[i]}</Typography>
-                        <audio controls crossOrigin="anonymous">
-                          <source src={`${GS_URL}/${member}/${au}`} type="audio/mpeg" />
-                        </audio>
+                      <CardContent sx={{ m: 0 }}>
+                        <Typography variant="body1">{audioText[i].toUpperCase().replace(/_/g, " ")}</Typography>
+                        <audio
+                          preload
+                          crossOrigin="anonymous"
+                          src={`${GS_URL}/${member}/${au}`}
+                          ref={selAudio === au ? audioRef : null}
+                        />
                       </CardContent>
                     </Card>
                   </Grid>
@@ -280,8 +349,15 @@ function DigitalSouvenir() {
             )}
             {!!selText && !!selAudio && page === 2 && (
               <Grid item md>
-                <Button variant="contained" color="primary" onClick={handleDownload} fullWidth>
-                  Download
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleDownload}
+                  fullWidth
+                  disabled={loading}
+                  sx={{ height: "100%" }}
+                >
+                  {loading ? <CircularProgress size="1.5em" disableShrink /> : "Download"}
                 </Button>
               </Grid>
             )}

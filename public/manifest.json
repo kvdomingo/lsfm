@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "LE SSERAFIM",
+  "name": "The First Moment of LE SSERAFIM",
   "icons": [
     {
       "src": "favicon.ico",
@@ -16,6 +16,16 @@
       "src": "logo512.png",
       "type": "image/png",
       "sizes": "512x512"
+    },
+    {
+      "src": "logo_light.svg",
+      "type": "image/svg+xml",
+      "sizes": "127x40"
+    },
+    {
+      "src": "logo_dark.svg",
+      "type": "image/svg+xml",
+      "sizes": "127x40"
     }
   ],
   "start_url": ".",

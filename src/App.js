@@ -1,7 +1,9 @@
 import "./App.css";
-import { Container, Grid } from "@mui/material";
+import { AppBar, Container, Grid, Toolbar } from "@mui/material";
 import { BrowserRouter as Router, Link, Routes, Route } from "react-router-dom";
 import DigitalSouvenir from "./components/DigitalSouvenir";
+
+const { PUBLIC_URL } = process.env;
 
 const GS_URL = process.env.REACT_APP_GS_URL;
 
@@ -9,7 +11,7 @@ const members = ["sakura", "garam", "eunchae", "chaewon", "kazuha", "yunjin"];
 
 function CardDeck() {
   return (
-    <Container sx={{ minHeight: "100vh", py: "2em" }}>
+    <Container sx={{ minHeight: "100vh", mt: 4, py: "2em" }}>
       <Grid container>
         {members.map(member => (
           <Grid item md={4} key={member} sx={{ p: 2 }}>
@@ -31,6 +33,15 @@ function CardDeck() {
 function App() {
   return (
     <Router>
+      <AppBar color="inherit" sx={{ boxShadow: "none" }}>
+        <Container>
+          <Toolbar disableGutters sx={{ justifyContent: "center" }}>
+            <Link to="/">
+              <img src={`${PUBLIC_URL}/logo_dark.svg`} alt="LE SSERAFIM" width={150} />
+            </Link>
+          </Toolbar>
+        </Container>
+      </AppBar>
       <Routes>
         <Route path="/" element={<CardDeck />} />
         <Route path="/digitalsouvenir/:member" element={<DigitalSouvenir />} />
