@@ -14,12 +14,26 @@ function CardDeck() {
     <Container sx={{ minHeight: "100vh", mt: 4, py: "2em" }}>
       <Grid container>
         {members.map(member => (
-          <Grid item md={4} key={member} sx={{ p: 2 }}>
+          <Grid
+            item
+            md={4}
+            key={member}
+            sx={{
+              "p": 2,
+              "img:hover": {
+                boxShadow: "0 0 20px 1px rgba(0, 0, 0, 0.25)",
+                transition: "box-shadow 300ms ease",
+              },
+            }}
+          >
             <Link to={`/digitalsouvenir/${member}`}>
               <img
                 src={`${GS_URL}/${member}/card.png`}
                 alt={`${member} card`}
-                style={{ width: "100%", borderRadius: 6 }}
+                style={{
+                  width: "100%",
+                  borderRadius: 6,
+                }}
                 crossOrigin="anonymous"
               />
             </Link>
