@@ -67,24 +67,18 @@ function DigitalSouvenir() {
 
   useEffect(() => {
     if (!!audioRef.current) {
-      audioRef.current.addEventListener("ended", () => {
-        setAudioPlaying(false);
-      });
-      audioRef.current.addEventListener("playing", () => {
-        setAudioPlaying(true);
-      });
-      audioRef.current.addEventListener("pause", () => {
-        setAudioPlaying(false);
-      });
+      audioRef.current.addEventListener("ended", () => setAudioPlaying(false));
+      audioRef.current.addEventListener("playing", () => setAudioPlaying(true));
+      audioRef.current.addEventListener("pause", () => setAudioPlaying(false));
     }
     return () => {
       if (!!audioRef.current) {
-        audioRef.current.removeEventListener("ended", () => {});
-        audioRef.current.removeEventListener("pause", () => {});
-        audioRef.current.removeEventListener("playing", () => {});
+        audioRef.current.removeEventListener("ended", () => setAudioPlaying(false));
+        audioRef.current.removeEventListener("playing", () => setAudioPlaying(true));
+        audioRef.current.removeEventListener("pause", () => setAudioPlaying(false));
       }
     };
-  }, [audioRef]);
+  }, [audioRef.current]);
 
   function handleSelectVisual(visual) {
     setSelVisual(visual);
@@ -219,7 +213,7 @@ function DigitalSouvenir() {
                     <img
                       src={`${GS_URL}/${member}/${vis}`}
                       alt={`${member} ${vis}`}
-                      style={{ width: "100%", borderRadius: 6, cursor: "pointer" }}
+                      style={{ width: "100%", borderRadius: 6, cursor: "pointer", filter: "grayscale(100%)" }}
                       onClick={() => handleSelectVisual(vis)}
                       crossOrigin="anonymous"
                     />
@@ -241,7 +235,7 @@ function DigitalSouvenir() {
                         playsInline
                         muted
                         loop
-                        style={{ width: "100%", borderRadius: 6, cursor: "pointer" }}
+                        style={{ width: "100%", borderRadius: 6, cursor: "pointer", filter: "grayscale(100%)" }}
                         onClick={() => handleSelectVisual(mov)}
                         crossOrigin="anonymous"
                         src={`${GS_URL}/${member}/${mov}`}
