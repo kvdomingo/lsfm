@@ -1,5 +1,5 @@
-import ReactGA from "react-ga4";
 import { useEffect } from "react";
+import ReactGA from "react-ga4";
 import { useLocation } from "react-router-dom";
 
 function GAUtil() {

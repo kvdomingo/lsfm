@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
 import ReactGA from "react-ga4";
+import { useParams } from "react-router-dom";
+
+import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
+import {
+  PauseCircleOutline as PauseCircleOutlineIcon,
+  PlayCircleOutline as PlayCircleOutlineIcon,
+} from "@mui/icons-material";
 import {
   Alert,
   Button,
@@ -14,16 +20,9 @@ import {
   Snackbar,
   Typography,
 } from "@mui/material";
-import {
-  PlayCircleOutline as PlayCircleOutlineIcon,
-  PauseCircleOutline as PauseCircleOutlineIcon,
-} from "@mui/icons-material";
-import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { saveAs } from "file-saver";
 
-const { PUBLIC_URL } = process.env;
-
-const GS_URL = process.env.REACT_APP_GS_URL;
+const GS_URL = import.meta.env.VITE_GS_URL;
 
 const memberIndex = {
   sakura: 1,
@@ -34,12 +33,21 @@ const memberIndex = {
   yunjin: 6,
 };
 
-const audioText = ["intro", "killing_part", "message_kr_1", "message_kr_2", "message_kr_3", "message_jp", "message_en"];
+const audioText = [
+  "intro",
+  "killing_part",
+  "message_kr_1",
+  "message_kr_2",
+  "message_kr_3",
+  "message_jp",
+  "message_en",
+];
 
 function DigitalSouvenir() {
-  const { member } = useParams();
+  const member = useParams().member! as keyof typeof memberIndex;
   const [page, setPage] = useState(1);
-  const [openProgressNotification, setOpenProgressNotification] = useState(false);
+  const [openProgressNotification, setOpenProgressNotification] =
+    useState(false);
   const [openErrorNotification, setOpenErrorNotification] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [selVisual, setSelVisual] = useState(null);
@@ -47,8 +55,11 @@ function DigitalSouvenir() {
   const [selAudio, setSelAudio] = useState(null);
   const [output, setOutput] = useState(null);
   const [loading, setLoading] = useState(false);
-  const audioRef = useRef(null);
-  const ffmpeg = createFFmpeg({ log: true, corePath: `${PUBLIC_URL}/ffmpeg-core/ffmpeg-core.js` });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ffmpeg = createFFmpeg({
+    log: true,
+    corePath: "/ffmpeg-core/ffmpeg-core.js",
+  });
 
   const visual = Array(10)
     .fill("")
@@ -56,7 +67,9 @@ function DigitalSouvenir() {
 
   const moving = Array(10)
     .fill("")
-    .map((_, i) => `Photocard_Visual_Moving_${memberIndex[member]}_${i + 1}.mp4`);
+    .map(
+      (_, i) => `Photocard_Visual_Moving_${memberIndex[member]}_${i + 1}.mp4`,
+    );
 
   const textWhite = Array(6)
     .fill("")
@@ -71,21 +84,27 @@ function DigitalSouvenir() {
     .map((_, i) => `auditory_${i}_${audioText[i]}.mp3`);
 
   useEffect(() => {
-    if (!!audioRef.current) {
+    if (audioRef.current) {
       audioRef.current.addEventListener("ended", () => setAudioPlaying(false));
       audioRef.current.addEventListener("playing", () => setAudioPlaying(true));
       audioRef.current.addEventListener("pause", () => setAudioPlaying(false));
     }
     return () => {
-      if (!!audioRef.current) {
-        audioRef.current.removeEventListener("ended", () => setAudioPlaying(false));
-        audioRef.current.removeEventListener("playing", () => setAudioPlaying(true));
-        audioRef.current.removeEventListener("pause", () => setAudioPlaying(false));
+      if (audioRef.current) {
+        audioRef.current.removeEventListener("ended", () =>
+          setAudioPlaying(false),
+        );
+        audioRef.current.removeEventListener("playing", () =>
+          setAudioPlaying(true),
+        );
+        audioRef.current.removeEventListener("pause", () =>
+          setAudioPlaying(false),
+        );
       }
     };
-  }, [audioRef.current]);
+  }, []);
 
-  function handleSelectVisual(visual) {
+  function handleSelectVisual(visual: string) {
     setSelVisual(visual);
     setSelText(null);
     setSelAudio(null);
@@ -109,12 +128,26 @@ function DigitalSouvenir() {
     setOpenProgressNotification(true);
     await ffmpeg.load();
     let data;
-    ffmpeg.FS("writeFile", selVisual, await fetchFile(`${GS_URL}/${member}/${selVisual}`));
-    ffmpeg.FS("writeFile", selText, await fetchFile(`${GS_URL}/${member}/${selText}`));
-    ffmpeg.FS("writeFile", selAudio, await fetchFile(`${GS_URL}/${member}/${selAudio}`));
+    ffmpeg.FS(
+      "writeFile",
+      selVisual,
+      await fetchFile(`${GS_URL}/${member}/${selVisual}`),
+    );
+    ffmpeg.FS(
+      "writeFile",
+      selText,
+      await fetchFile(`${GS_URL}/${member}/${selText}`),
+    );
+    ffmpeg.FS(
+      "writeFile",
+      selAudio,
+      await fetchFile(`${GS_URL}/${member}/${selAudio}`),
+    );
     try {
       await ffmpeg.run(
-        ...(selVisual.endsWith("mp4") ? ["-stream_loop", "-1"] : ["-loop", "1"]),
+        ...(selVisual.endsWith("mp4")
+          ? ["-stream_loop", "-1"]
+          : ["-loop", "1"]),
         "-i",
         selVisual,
         "-i",
@@ -142,7 +175,10 @@ function DigitalSouvenir() {
       });
       setOpenProgressNotification(false);
       setLoading(false);
-      saveAs(URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })), `${member}-digital-souvenir.mp4`);
+      saveAs(
+        URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })),
+        `${member}-digital-souvenir.mp4`,
+      );
     } catch (err) {
       console.error(err);
       setLoading(false);
@@ -227,7 +263,9 @@ function DigitalSouvenir() {
             {page === 1 && (
               <>
                 <Container maxWidth="xl" sx={{ mb: 3 }}>
-                  <Typography variant="overline">Step 02. Choose the visual card you like best</Typography>
+                  <Typography variant="overline">
+                    Step 02. Choose the visual card you like best
+                  </Typography>
                 </Container>
                 <Container maxWidth="xl">
                   <Typography variant="h5">Visual - Still Images</Typography>
@@ -241,7 +279,12 @@ function DigitalSouvenir() {
                       <img
                         src={`${GS_URL}/${member}/${vis}`}
                         alt={`${member} ${vis}`}
-                        style={{ width: "100%", borderRadius: 6, cursor: "pointer", filter: "grayscale(100%)" }}
+                        style={{
+                          width: "100%",
+                          borderRadius: 6,
+                          cursor: "pointer",
+                          filter: "grayscale(100%)",
+                        }}
                         onClick={() => handleSelectVisual(vis)}
                         crossOrigin="anonymous"
                       />
@@ -263,7 +306,12 @@ function DigitalSouvenir() {
                           playsInline
                           muted
                           loop
-                          style={{ width: "100%", borderRadius: 6, cursor: "pointer", filter: "grayscale(100%)" }}
+                          style={{
+                            width: "100%",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            filter: "grayscale(100%)",
+                          }}
                           onClick={() => handleSelectVisual(mov)}
                           crossOrigin="anonymous"
                           src={`${GS_URL}/${member}/${mov}`}
@@ -278,7 +326,8 @@ function DigitalSouvenir() {
               <>
                 <Container maxWidth="xl" sx={{ mb: 3 }}>
                   <Typography variant="overline">
-                    Step 03. Choose one text card and one auditory card to complete
+                    Step 03. Choose one text card and one auditory card to
+                    complete
                   </Typography>
                 </Container>
                 <Container maxWidth="xl">
@@ -294,7 +343,12 @@ function DigitalSouvenir() {
                         <img
                           src={`${GS_URL}/${member}/${txt}`}
                           alt={`${member} ${txt}`}
-                          style={{ width: "100%", borderRadius: 6, cursor: "pointer", backgroundColor: "black" }}
+                          style={{
+                            width: "100%",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            backgroundColor: "black",
+                          }}
                           onClick={async () => await handleAddText(txt)}
                           crossOrigin="anonymous"
                         />
@@ -307,7 +361,12 @@ function DigitalSouvenir() {
                         <img
                           src={`${GS_URL}/${member}/${txt}`}
                           alt={`${member} ${txt}`}
-                          style={{ width: "100%", borderRadius: 6, cursor: "pointer", border: "1px solid black" }}
+                          style={{
+                            width: "100%",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            border: "1px solid black",
+                          }}
                           onClick={async () => await handleAddText(txt)}
                           crossOrigin="anonymous"
                         />
@@ -329,7 +388,10 @@ function DigitalSouvenir() {
                         sx={{
                           m: 1,
                           border: "2px solid",
-                          borderColor: selAudio === au ? "primary.main" : "rgba(0, 0, 0, 0.12)",
+                          borderColor:
+                            selAudio === au
+                              ? "primary.main"
+                              : "rgba(0, 0, 0, 0.12)",
                           cursor: "pointer",
                           height: "100%",
                           alignItems: "center",
@@ -340,7 +402,9 @@ function DigitalSouvenir() {
                         onClick={async () => await handleAddAudio(au)}
                       >
                         <CardContent sx={{ m: 0 }}>
-                          <Typography variant="body1">{audioText[i].toUpperCase().replace(/_/g, " ")}</Typography>
+                          <Typography variant="body1">
+                            {audioText[i].toUpperCase().replace(/_/g, " ")}
+                          </Typography>
                           <audio
                             preload
                             crossOrigin="anonymous"
@@ -357,14 +421,24 @@ function DigitalSouvenir() {
             <Grid container justifyContent="center" sx={{ mt: 4 }} spacing={2}>
               {page > 1 && (
                 <Grid item md>
-                  <Button variant="contained" color="primary" onClick={() => setPage(page => page - 1)} fullWidth>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setPage(page => page - 1)}
+                    fullWidth
+                  >
                     Back
                   </Button>
                 </Grid>
               )}
               {!!selVisual && page === 1 && (
                 <Grid item md>
-                  <Button variant="contained" color="primary" onClick={() => setPage(page => page + 1)} fullWidth>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setPage(page => page + 1)}
+                    fullWidth
+                  >
                     Next
                   </Button>
                 </Grid>
@@ -387,7 +461,10 @@ function DigitalSouvenir() {
           </Grid>
         </Grid>
       </Container>
-      <Snackbar open={openProgressNotification} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+      <Snackbar
+        open={openProgressNotification}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
         <Alert severity="info" icon={false}>
           <Grid container alignContent="center">
             <CircularProgress sx={{ mr: 1 }} size="1.5em" disableShrink />

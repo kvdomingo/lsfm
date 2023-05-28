@@ -1,13 +1,13 @@
-import "./App.css";
-import { AppBar, Container, Grid, Toolbar } from "@mui/material";
-import { BrowserRouter as Router, Link, Routes, Route } from "react-router-dom";
 import ReactGA from "react-ga4";
+import { Link, Route, BrowserRouter as Router, Routes } from "react-router-dom";
+
+import { AppBar, Container, Grid, Toolbar } from "@mui/material";
+
+import "./App.css";
 import DigitalSouvenir from "./components/DigitalSouvenir";
 import GAUtil from "./components/GAUtil";
 
-const { NODE_ENV, PUBLIC_URL } = process.env;
-
-const GS_URL = process.env.REACT_APP_GS_URL;
+const { NODE_ENV, VITE_GS_URL } = import.meta.env;
 
 const members = ["sakura", "garam", "eunchae", "chaewon", "kazuha", "yunjin"];
 
@@ -39,7 +39,7 @@ function CardDeck() {
               }
             >
               <img
-                src={`${GS_URL}/${member}/card.png`}
+                src={`${VITE_GS_URL}/${member}/card.png`}
                 alt={`${member} card`}
                 style={{
                   width: "100%",
@@ -63,7 +63,7 @@ function App() {
         <Container>
           <Toolbar disableGutters sx={{ justifyContent: "center" }}>
             <Link to="/">
-              <img src={`${PUBLIC_URL}/logo_dark.svg`} alt="LE SSERAFIM" width={150} />
+              <img src="/logo_dark.svg" alt="LE SSERAFIM" width={150} />
             </Link>
           </Toolbar>
         </Container>
