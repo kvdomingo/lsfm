@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactGA from "react-ga4";
 import { useParams } from "react-router-dom";
 
@@ -10,8 +10,6 @@ import {
 import {
   Alert,
   Button,
-  Card,
-  CardContent,
   CircularProgress,
   Container,
   Divider,
@@ -20,7 +18,11 @@ import {
   Snackbar,
   Typography,
 } from "@mui/material";
+import clsx from "clsx";
 import { saveAs } from "file-saver";
+
+import Image from "./Image.tsx";
+import Video from "./Video.tsx";
 
 const GS_URL = import.meta.env.VITE_GS_URL;
 
@@ -43,6 +45,11 @@ const audioText = [
   "message_en",
 ];
 
+const ffmpeg = createFFmpeg({
+  log: true,
+  corePath: "/ffmpeg-core/ffmpeg-core.js",
+});
+
 function DigitalSouvenir() {
   const member = useParams().member! as keyof typeof memberIndex;
   const [page, setPage] = useState(1);
@@ -50,38 +57,54 @@ function DigitalSouvenir() {
     useState(false);
   const [openErrorNotification, setOpenErrorNotification] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
-  const [selVisual, setSelVisual] = useState(null);
-  const [selText, setSelText] = useState(null);
-  const [selAudio, setSelAudio] = useState(null);
-  const [output, setOutput] = useState(null);
+  const [selVisual, setSelVisual] = useState<string | null>(null);
+  const [selText, setSelText] = useState<string | null>(null);
+  const [selAudio, setSelAudio] = useState<string | null>(null);
+  const [output, setOutput] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const ffmpeg = createFFmpeg({
-    log: true,
-    corePath: "/ffmpeg-core/ffmpeg-core.js",
-  });
 
-  const visual = Array(10)
-    .fill("")
-    .map((_, i) => `Photocard_Visual_${memberIndex[member]}_${i + 1}.png`);
+  const visual = useMemo(
+    () =>
+      Array(10)
+        .fill("")
+        .map((_, i) => `Photocard_Visual_${memberIndex[member]}_${i + 1}.png`),
+    [member],
+  );
 
-  const moving = Array(10)
-    .fill("")
-    .map(
-      (_, i) => `Photocard_Visual_Moving_${memberIndex[member]}_${i + 1}.mp4`,
-    );
+  const moving = useMemo(
+    () =>
+      Array(10)
+        .fill("")
+        .map(
+          (_, i) => `Photocard_Visual_Moving_${memberIndex[member]}_${i + 1}`,
+        ),
+    [member],
+  );
 
-  const textWhite = Array(6)
-    .fill("")
-    .map((_, i) => `Photocard_Text_${memberIndex[member]}_${i + 1}_w.png`);
+  const textWhite = useMemo(
+    () =>
+      Array(6)
+        .fill("")
+        .map((_, i) => `Photocard_Text_${memberIndex[member]}_${i + 1}_w.png`),
+    [member],
+  );
 
-  const textBlack = Array(6)
-    .fill("")
-    .map((_, i) => `Photocard_Text_${memberIndex[member]}_${i + 1}_b.png`);
+  const textBlack = useMemo(
+    () =>
+      Array(6)
+        .fill("")
+        .map((_, i) => `Photocard_Text_${memberIndex[member]}_${i + 1}_b.png`),
+    [member],
+  );
 
-  const audio = Array(7)
-    .fill("")
-    .map((_, i) => `auditory_${i}_${audioText[i]}.mp3`);
+  const audio = useMemo(
+    () =>
+      Array(7)
+        .fill("")
+        .map((_, i) => `auditory_${i}_${audioText[i]}.mp3`),
+    [],
+  );
 
   useEffect(() => {
     if (audioRef.current) {
@@ -113,20 +136,23 @@ function DigitalSouvenir() {
     audioRef.current = null;
   }
 
-  async function handleAddText(text) {
+  async function handleAddText(text: string) {
     setSelText(text);
   }
 
-  async function handleAddAudio(audio) {
-    if (!!audioRef.current) audioRef.current.pause();
+  async function handleAddAudio(audio: string) {
+    if (audioRef.current) audioRef.current.pause();
     setSelAudio(audio);
     setAudioPlaying(false);
   }
 
   async function handleDownload() {
+    if (!selVisual || !selText || !selAudio) return;
+
     setLoading(true);
     setOpenProgressNotification(true);
-    await ffmpeg.load();
+    if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
     let data;
     ffmpeg.FS(
       "writeFile",
@@ -143,9 +169,10 @@ function DigitalSouvenir() {
       selAudio,
       await fetchFile(`${GS_URL}/${member}/${selAudio}`),
     );
+
     try {
       await ffmpeg.run(
-        ...(selVisual.endsWith("mp4")
+        ...(selVisual.includes("Moving")
           ? ["-stream_loop", "-1"]
           : ["-loop", "1"]),
         "-i",
@@ -158,7 +185,7 @@ function DigitalSouvenir() {
         "[0][1] overlay=0:0",
         "-c:v",
         "libx264",
-        ...(selVisual.endsWith("mp4") ? [] : ["-tune", "stillimage"]),
+        ...(selVisual.includes("Moving") ? [] : ["-tune", "stillimage"]),
         "-c:a",
         "copy",
         "-map",
@@ -166,155 +193,126 @@ function DigitalSouvenir() {
         "-shortest",
         "out.mp4",
       );
+
       data = ffmpeg.FS("readFile", "out.mp4");
+
       ReactGA.event({
         category: "souvenir",
         action: "download",
         label: `${member} ${selVisual} ${selText} ${selAudio}`,
-        value: "success",
+        value: 1,
       });
+
       setOpenProgressNotification(false);
       setLoading(false);
+
       saveAs(
         URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })),
         `${member}-digital-souvenir.mp4`,
       );
     } catch (err) {
       console.error(err);
+
       setLoading(false);
       setOpenProgressNotification(false);
       setOpenErrorNotification(true);
+
       ReactGA.event({
         category: "souvenir",
         action: "download",
         label: `${member} ${selVisual} ${selText} ${selAudio}`,
-        value: "fail",
+        value: 0,
       });
     }
   }
 
   return (
     <>
-      <Container sx={{ minHeight: "100vh", mt: 6, py: "2em" }} maxWidth="xl">
+      <Container className="min-h-screen my-8" maxWidth="xl">
+        <Grid container>
+          <Grid item md={4} />
+          <Grid item md>
+            <div className="-mx-14 -mb-12">
+              <h1 className="my-0">The First Moment of</h1>
+              <h2 className="text-[100pt] relative my-0 capitalize text-outline">
+                {member}
+              </h2>
+            </div>
+          </Grid>
+        </Grid>
         <Grid container>
           <Grid item md={4}>
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                height: "max-content",
-              }}
-            >
-              {!selVisual ? null : output.endsWith("mp4") ? (
-                <video
-                  autoPlay
-                  loop
-                  playsInline
-                  muted
-                  style={{ width: "100%", borderRadius: 6 }}
-                  src={`${GS_URL}/${member}/${selVisual}`}
-                  crossOrigin="anonymous"
-                />
+            <div className="relative">
+              {!selVisual ? null : output?.includes("Moving") ? (
+                <Video path={`${member}/${selVisual}`} />
               ) : (
-                <img
-                  src={`${GS_URL}/${member}/${selVisual}`}
-                  style={{ width: "100%", borderRadius: 6 }}
-                  alt={`${member} ${output}`}
-                  crossOrigin="anonymous"
-                />
+                <Image path={`${member}/${selVisual}`} className="w-full" />
               )}
               {!!selText && (
-                <img
-                  src={`${GS_URL}/${member}/${selText}`}
-                  alt={`${member} ${selText}`}
-                  crossOrigin="anonymous"
-                  style={{
-                    width: "100%",
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                  }}
+                <Image
+                  path={`${member}/${selText}`}
+                  className="absolute top-0 left-0 w-full"
                 />
               )}
-              {!!selAudio && !!audioRef && (
-                <IconButton
-                  sx={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                  }}
-                  color="default"
-                  onClick={() => {
-                    if (audioPlaying) audioRef.current.pause();
-                    else audioRef.current.play();
-                    setAudioPlaying(playing => !playing);
-                  }}
-                >
-                  {audioPlaying ? (
-                    <PauseCircleOutlineIcon sx={{ fontSize: 100 }} />
-                  ) : (
-                    <PlayCircleOutlineIcon sx={{ fontSize: 100 }} />
-                  )}
-                </IconButton>
+              {!!selAudio && !!audioRef.current && (
+                <div className="absolute bottom-0 left-0">
+                  <IconButton
+                    color="default"
+                    onClick={() => {
+                      if (audioPlaying) audioRef.current?.pause();
+                      else void audioRef.current?.play();
+                      setAudioPlaying(playing => !playing);
+                    }}
+                  >
+                    {audioPlaying ? (
+                      <PauseCircleOutlineIcon sx={{ fontSize: 100 }} />
+                    ) : (
+                      <PlayCircleOutlineIcon sx={{ fontSize: 100 }} />
+                    )}
+                  </IconButton>
+                </div>
               )}
             </div>
           </Grid>
-          <Grid item container md={8} alignContent="flex-start" px={2}>
+          <Grid item container md={8} className="content-start px-2 pt-12">
             {page === 1 && (
               <>
-                <Container maxWidth="xl" sx={{ mb: 3 }}>
-                  <Typography variant="overline">
+                <Container maxWidth="xl" className="mb-3">
+                  <p className="uppercase text-sm font-bold">
                     Step 02. Choose the visual card you like best
-                  </Typography>
+                  </p>
                 </Container>
                 <Container maxWidth="xl">
                   <Typography variant="h5">Visual - Still Images</Typography>
                 </Container>
                 <Container maxWidth="xl" sx={{ py: 1 }}>
-                  <Divider />
+                  <Divider className="bg-white" />
                 </Container>
                 <Grid container>
                   {visual.map(vis => (
                     <Grid item md key={vis} sx={{ p: 1 }}>
-                      <img
-                        src={`${GS_URL}/${member}/${vis}`}
-                        alt={`${member} ${vis}`}
-                        style={{
-                          width: "100%",
-                          borderRadius: 6,
-                          cursor: "pointer",
-                          filter: "grayscale(100%)",
-                        }}
+                      <Image
+                        path={`${member}/${vis}`}
                         onClick={() => handleSelectVisual(vis)}
-                        crossOrigin="anonymous"
+                        className="w-full grayscale cursor-pointer transition-all ease-in-out duration-300 hover:-translate-y-0.5"
                       />
                     </Grid>
                   ))}
                 </Grid>
-                <Grid container sx={{ mt: 4 }}>
+                <Grid container className="mt-8">
                   <Container maxWidth="xl">
                     <Typography variant="h5">Visual - Moving Images</Typography>
                   </Container>
                   <Container maxWidth="xl" sx={{ py: 1 }}>
-                    <Divider />
+                    <Divider className="bg-white" />
                   </Container>
                   <Grid container>
                     {moving.map(mov => (
                       <Grid item md key={mov} sx={{ p: 1 }}>
-                        <video
-                          autoPlay
-                          playsInline
-                          muted
-                          loop
-                          style={{
-                            width: "100%",
-                            borderRadius: 6,
-                            cursor: "pointer",
-                            filter: "grayscale(100%)",
-                          }}
+                        <Video
+                          path={`${member}/${mov}`}
+                          className="cursor-pointer grayscale"
                           onClick={() => handleSelectVisual(mov)}
-                          crossOrigin="anonymous"
-                          src={`${GS_URL}/${member}/${mov}`}
                         />
                       </Grid>
                     ))}
@@ -324,95 +322,68 @@ function DigitalSouvenir() {
             )}
             {page === 2 && (
               <>
-                <Container maxWidth="xl" sx={{ mb: 3 }}>
-                  <Typography variant="overline">
+                <Container maxWidth="xl" className="mb-4">
+                  <p className="text-sm uppercase font-bold">
                     Step 03. Choose one text card and one auditory card to
                     complete
-                  </Typography>
+                  </p>
                 </Container>
                 <Container maxWidth="xl">
                   <Typography variant="h5">TEXT</Typography>
                 </Container>
-                <Container maxWidth="xl" sx={{ py: 1 }}>
-                  <Divider />
+                <Container maxWidth="xl" className="py-2">
+                  <Divider className="bg-white" />
                 </Container>
-                <Grid container>
+                <div className="mb-6">
                   <Grid container>
                     {textWhite.map(txt => (
-                      <Grid item md key={txt} sx={{ p: 1 }}>
-                        <img
-                          src={`${GS_URL}/${member}/${txt}`}
-                          alt={`${member} ${txt}`}
-                          style={{
-                            width: "100%",
-                            borderRadius: 6,
-                            cursor: "pointer",
-                            backgroundColor: "black",
-                          }}
+                      <Grid item md key={txt} className="p-2">
+                        <Image
+                          path={`${member}/${txt}`}
+                          className="w-full bg-[#080808] cursor-pointer border border-solid border-white"
                           onClick={async () => await handleAddText(txt)}
-                          crossOrigin="anonymous"
                         />
                       </Grid>
                     ))}
                   </Grid>
                   <Grid container>
                     {textBlack.map(txt => (
-                      <Grid item md key={txt} sx={{ p: 1 }}>
-                        <img
-                          src={`${GS_URL}/${member}/${txt}`}
-                          alt={`${member} ${txt}`}
-                          style={{
-                            width: "100%",
-                            borderRadius: 6,
-                            cursor: "pointer",
-                            border: "1px solid black",
-                          }}
+                      <Grid item md key={txt} className="p-2">
+                        <Image
+                          path={`${member}/${txt}`}
+                          className="w-full cursor-pointer bg-white"
                           onClick={async () => await handleAddText(txt)}
-                          crossOrigin="anonymous"
                         />
                       </Grid>
                     ))}
                   </Grid>
-                </Grid>
+                </div>
                 <Container maxWidth="xl">
                   <Typography variant="h5">AUDITORY</Typography>
                 </Container>
-                <Container maxWidth="xl" sx={{ py: 1 }}>
-                  <Divider />
+                <Container maxWidth="xl" className="py-2">
+                  <Divider className="bg-white" />
                 </Container>
                 <Grid container>
                   {audio.map((au, i) => (
                     <Grid item md key={au}>
-                      <Card
-                        elevation={0}
-                        sx={{
-                          m: 1,
-                          border: "2px solid",
-                          borderColor:
-                            selAudio === au
-                              ? "primary.main"
-                              : "rgba(0, 0, 0, 0.12)",
-                          cursor: "pointer",
-                          height: "100%",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          textAlign: "center",
-                          display: "flex",
-                        }}
+                      <div
+                        className={clsx(
+                          "shadow-none m-2 p-2 border-2 border-solid cursor-pointer h-full text-center flex place-items-center place-content-center",
+                          {
+                            "border-blue-500": selAudio === au,
+                          },
+                        )}
                         onClick={async () => await handleAddAudio(au)}
                       >
-                        <CardContent sx={{ m: 0 }}>
-                          <Typography variant="body1">
-                            {audioText[i].toUpperCase().replace(/_/g, " ")}
-                          </Typography>
-                          <audio
-                            preload
-                            crossOrigin="anonymous"
-                            src={`${GS_URL}/${member}/${au}`}
-                            ref={selAudio === au ? audioRef : null}
-                          />
-                        </CardContent>
-                      </Card>
+                        <p>{audioText[i].toUpperCase().replace(/_/g, " ")}</p>
+                        <audio
+                          preload="true"
+                          crossOrigin="anonymous"
+                          src={`${GS_URL}/${member}/${au}`}
+                          ref={selAudio === au ? audioRef : null}
+                        />
+                      </div>
                     </Grid>
                   ))}
                 </Grid>
