@@ -1,9 +1,9 @@
 import { Link, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 import "./App.css";
-import CardDeck from "./components/CardDeck.tsx";
-import DigitalSouvenir from "./components/DigitalSouvenir";
-import GAUtil from "./components/GAUtil";
+import CardDeck from "./components/cardDeck/CardDeck.tsx";
+import DigitalSouvenir from "./components/digitalSouvenir/DigitalSouvenir.tsx";
+import GAUtil from "./components/utils/GAUtil.tsx";
 
 const { NODE_ENV } = import.meta.env;
 
