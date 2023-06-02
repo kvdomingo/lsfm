@@ -1,7 +1,6 @@
-import { Snackbar } from "@mui/base";
+import { Alert, CircularProgress, Snackbar } from "@mui/material";
 
-import { useSelector } from "../../hooks/store.ts";
-import { AlertColor } from "../../types/alert.ts";
+import { useSelector } from "@/hooks/store.ts";
 
 function GlobalNotification() {
   const notification = useSelector(state => state.app.notification);
@@ -9,11 +8,14 @@ function GlobalNotification() {
   return (
     <Snackbar
       open={notification.isOpen}
-      className={`animate-slide-in animate-slide-out text-black fixed bottom-0 right-0 m-6 p-4 rounded-lg ${
-        AlertColor[notification.status]
-      }`}
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
     >
-      {notification.message}
+      <Alert severity={notification.status} icon={false}>
+        <div className="flex items-center">
+          <CircularProgress className="mr-2" size="1.5em" disableShrink />
+          {notification.message}
+        </div>
+      </Alert>
     </Snackbar>
   );
 }

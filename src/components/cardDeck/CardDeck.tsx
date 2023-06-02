@@ -1,7 +1,8 @@
 import ReactGA from "react-ga4";
 import { Link } from "react-router-dom";
 
-import { members } from "../../constants.ts";
+import { members } from "@/constants.ts";
+
 import Image from "../common/Image.tsx";
 
 function CardDeck() {
@@ -14,13 +15,13 @@ function CardDeck() {
   };
 
   return (
-    <div className="container min-h-screen py-4 mx-auto grid grid-cols-1 md:grid-cols-3">
+    <div className="container mx-auto grid min-h-screen grid-cols-1 py-4 md:grid-cols-3">
       {members.map(member => (
         <div key={member} className="p-4">
           <Link to={`/digitalsouvenir/${member}`} onClick={handleClick(member)}>
             <Image
               path={`${member}/card.png`}
-              className="w-full transition-all ease-in-out duration-300 hover:-translate-y-1"
+              className="w-full transition-all duration-300 ease-in-out hover:-translate-y-1"
             />
           </Link>
         </div>

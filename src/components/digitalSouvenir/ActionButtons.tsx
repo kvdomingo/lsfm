@@ -4,15 +4,16 @@ import { useParams } from "react-router-dom";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { saveAs } from "file-saver";
 
-import { useDispatch, useSelector } from "../../hooks/store.ts";
+import Button from "@/components/common/Button.tsx";
+import { useDispatch, useSelector } from "@/hooks/store.ts";
 import {
   Page,
   decreasePage,
   increasePage,
   setIsProcessing,
   setNotification,
-} from "../../store/appSlice.ts";
-import { Member } from "../../types/member.ts";
+} from "@/store/appSlice.ts";
+import { Member } from "@/types/member.ts";
 
 const GS_URL = import.meta.env.VITE_GS_URL;
 
@@ -141,29 +142,17 @@ function ActionButtons() {
   return (
     <div>
       {page > Page.VISUAL && (
-        <button
-          onClick={() => dispatch(decreasePage())}
-          className="cursor-pointer bg-transparent text-white text-sm border-3 border-white border-solid py-2 px-14 uppercase leading-loose tracking-wider mr-2"
-        >
-          Back
-        </button>
+        <Button onClick={() => dispatch(decreasePage())}>Back</Button>
       )}
       {!!selVisual && page === Page.VISUAL && (
-        <button
-          onClick={() => dispatch(increasePage())}
-          className="cursor-pointer bg-transparent text-white text-sm border-3 border-white border-solid py-2 px-14 uppercase leading-loose tracking-wider mr-2"
-        >
+        <Button onClick={() => dispatch(increasePage())}>
           <b>Next</b>
-        </button>
+        </Button>
       )}
       {!!selText && !!selAudio && page === Page.TEXT_AUDIO && (
-        <button
-          onClick={handleDownload}
-          disabled={isProcessing}
-          className="cursor-pointer disabled:cursor-progress bg-transparent text-white text-sm border-3 border-white border-solid py-2 px-14 uppercase leading-loose tracking-wider"
-        >
+        <Button onClick={handleDownload} disabled={isProcessing}>
           Download
-        </button>
+        </Button>
       )}
     </div>
   );

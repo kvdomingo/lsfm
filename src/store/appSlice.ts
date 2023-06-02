@@ -1,6 +1,5 @@
+import { AlertColor } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-
-import { AlertStatus } from "../types/alert.ts";
 
 export enum Page {
   VISUAL,
@@ -10,7 +9,7 @@ export enum Page {
 export interface NotificationState {
   isOpen: boolean;
   message: string;
-  status: AlertStatus;
+  status: AlertColor;
 }
 
 export interface AppState {

@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 
-import { memberIndex } from "../../constants.ts";
-import { useDispatch } from "../../hooks/store.ts";
-import { setSelectedText } from "../../store/appSlice.ts";
-import { Member } from "../../types/member.ts";
+import { memberIndex } from "@/constants.ts";
+import { useDispatch } from "@/hooks/store.ts";
+import { setSelectedText } from "@/store/appSlice.ts";
+import { Member } from "@/types/member.ts";
+
 import Image from "../common/Image.tsx";
 
 function TextGallery() {
@@ -33,14 +34,14 @@ function TextGallery() {
 
   return (
     <div className="mb-6">
-      <h3 className="text-2xl my-2">TEXT</h3>
+      <h3 className="my-2 text-2xl">TEXT</h3>
       <hr className="text-white" />
-      <div className="grid grid-cols-6 py-4 gap-4">
+      <div className="grid grid-cols-6 gap-4 py-4">
         {textWhite.map(txt => (
           <Image
             key={txt}
             path={`${member}/${txt}`}
-            className="w-full bg-[#080808] cursor-pointer border border-solid border-white"
+            className="w-full cursor-pointer border border-solid border-white bg-[#080808]"
             onClick={handleClick(txt)}
           />
         ))}

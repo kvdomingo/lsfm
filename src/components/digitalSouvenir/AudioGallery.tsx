@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 
-import clsx from "clsx";
-
-import { audioText } from "../../constants.ts";
-import { useDispatch, useSelector } from "../../hooks/store.ts";
-import { setSelectedAudio } from "../../store/appSlice.ts";
+import { audioText } from "@/constants.ts";
+import { useDispatch, useSelector } from "@/hooks/store.ts";
+import { setSelectedAudio } from "@/store/appSlice.ts";
+import { cn } from "@/utils";
 
 function AudioGallery() {
   const dispatch = useDispatch();
@@ -20,13 +19,13 @@ function AudioGallery() {
 
   return (
     <div className="mb-6">
-      <h3 className="text-2xl my-2">AUDITORY</h3>
+      <h3 className="my-2 text-2xl">AUDITORY</h3>
       <hr className="text-white" />
-      <div className="grid grid-cols-7 py-4 gap-4">
+      <div className="grid grid-cols-7 gap-4 py-4">
         {audio.map((au, i) => (
           <div
-            className={clsx(
-              "aspect-square shadow-none p-2 border-2 border-solid cursor-pointer text-center flex place-items-center place-content-center",
+            className={cn(
+              "flex aspect-square cursor-pointer place-content-center place-items-center border-2 border-solid p-2 text-center shadow-none",
               {
                 "border-blue-500": selAudio === au,
               },

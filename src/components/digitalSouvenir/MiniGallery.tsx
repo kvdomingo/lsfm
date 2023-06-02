@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 
-import { useDispatch } from "../../hooks/store.ts";
-import { setOutput, setSelectedVisual } from "../../store/appSlice.ts";
-import { MediaType, Member } from "../../types/member.ts";
+import { useDispatch } from "@/hooks/store.ts";
+import { setOutput, setSelectedVisual } from "@/store/appSlice.ts";
+import { MediaType, Member } from "@/types/member.ts";
+
 import Image from "../common/Image.tsx";
 import Video from "../common/Video.tsx";
 
@@ -29,15 +30,15 @@ function MiniGallery({ header, media, type }: MiniGalleryProps) {
 
   return (
     <div className="mb-8">
-      <h3 className="text-2xl my-2">{header}</h3>
+      <h3 className="my-2 text-2xl">{header}</h3>
       <hr className="text-white" />
-      <div className="overflow-x-scroll whitespace-nowrap py-4 cursor-grab">
+      <div className="cursor-grab overflow-x-scroll whitespace-nowrap py-4">
         {media.map(medium => (
           <MediaComponent
             key={medium}
             path={`${member}/${medium}`}
             onClick={handleClick(medium)}
-            className="px-2 rounded-xl h-[200px] grayscale cursor-pointer transition-all ease-in-out duration-300 hover:-translate-y-1"
+            className="h-[200px] cursor-pointer rounded-xl px-2 grayscale transition-all duration-300 ease-in-out hover:-translate-y-1"
           />
         ))}
       </div>

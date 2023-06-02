@@ -1,3 +1,5 @@
+import { cld } from "@/cloudinary.ts";
+import { cn } from "@/utils";
 import {
   AdvancedVideo,
   lazyload,
@@ -5,8 +7,6 @@ import {
   responsive,
 } from "@cloudinary/react";
 import { scale } from "@cloudinary/url-gen/actions/resize";
-
-import { cld } from "../../cloudinary.ts";
 
 interface VideoProps {
   path: string;
@@ -25,7 +25,7 @@ function Video({ path, className, onClick }: VideoProps) {
       muted
       loop
       cldVid={vid}
-      className={`w-full rounded-lg ${className}`}
+      className={cn("rounded-lg", className)}
       plugins={[lazyload(), responsive(), placeholder({ mode: "blur" })]}
       onClick={onClick}
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
