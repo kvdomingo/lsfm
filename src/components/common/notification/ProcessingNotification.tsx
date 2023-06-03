@@ -2,22 +2,22 @@ import { Alert, CircularProgress, Snackbar } from "@mui/material";
 
 import { useSelector } from "@/hooks/store.ts";
 
-function GlobalNotification() {
-  const notification = useSelector(state => state.app.notification);
+function ProcessingNotification() {
+  const { isProcessingNotificationOpen } = useSelector(state => state.app);
 
   return (
     <Snackbar
-      open={notification.isOpen}
+      open={isProcessingNotificationOpen}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
     >
-      <Alert severity={notification.status} icon={false}>
+      <Alert severity="info" icon={false}>
         <div className="flex items-center">
           <CircularProgress className="mr-2" size="1.5em" disableShrink />
-          {notification.message}
+          Processing media. Please wait...
         </div>
       </Alert>
     </Snackbar>
   );
 }
 
-export default GlobalNotification;
+export default ProcessingNotification;

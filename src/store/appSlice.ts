@@ -1,15 +1,8 @@
-import { AlertColor } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 export enum Page {
   VISUAL,
   TEXT_AUDIO,
-}
-
-export interface NotificationState {
-  isOpen: boolean;
-  message: string;
-  status: AlertColor;
 }
 
 export interface AppState {
@@ -19,7 +12,8 @@ export interface AppState {
   output: string | null;
   isAudioPlaying: boolean;
   isProcessing: boolean;
-  notification: NotificationState;
+  isProcessingNotificationOpen: boolean;
+  isErrorNotificationOpen: boolean;
   page: Page;
 }
 
@@ -30,11 +24,8 @@ const initialState: AppState = {
   output: null,
   isAudioPlaying: false,
   isProcessing: false,
-  notification: {
-    isOpen: false,
-    message: "",
-    status: "info",
-  },
+  isProcessingNotificationOpen: false,
+  isErrorNotificationOpen: false,
   page: Page.VISUAL,
 };
 
@@ -61,11 +52,17 @@ export const appSlice = createSlice({
     toggleIsAudioPlaying: state => {
       state.isAudioPlaying = !state.isAudioPlaying;
     },
-    setNotification: (state, action: PayloadAction<NotificationState>) => {
-      state.notification = action.payload;
-    },
     setIsProcessing: (state, action: PayloadAction<boolean>) => {
       state.isProcessing = action.payload;
+    },
+    setIsProcessingNotificationOpen: (
+      state,
+      action: PayloadAction<boolean>,
+    ) => {
+      state.isProcessingNotificationOpen = action.payload;
+    },
+    setIsErrorNotificationOpen: (state, action: PayloadAction<boolean>) => {
+      state.isErrorNotificationOpen = action.payload;
     },
     decreasePage: state => {
       state.page -= 1;
@@ -86,8 +83,9 @@ export const {
   setOutput,
   setIsAudioPlaying,
   toggleIsAudioPlaying,
-  setNotification,
   setIsProcessing,
+  setIsProcessingNotificationOpen,
+  setIsErrorNotificationOpen,
   decreasePage,
   increasePage,
   resetState,

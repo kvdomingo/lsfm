@@ -4,21 +4,25 @@ import { useParams } from "react-router-dom";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { saveAs } from "file-saver";
 
+import { buildUrl } from "@/cloudinary.ts";
 import Button from "@/components/common/Button.tsx";
 import { useDispatch, useSelector } from "@/hooks/store.ts";
 import {
   Page,
   decreasePage,
   increasePage,
+  setIsErrorNotificationOpen,
   setIsProcessing,
-  setNotification,
+  setIsProcessingNotificationOpen,
 } from "@/store/appSlice.ts";
 import { Member } from "@/types/member.ts";
 
 const GS_URL = import.meta.env.VITE_GS_URL;
 
+const NODE_ENV = import.meta.env.NODE_ENV ?? "production";
+
 const ffmpeg = createFFmpeg({
-  log: true,
+  log: NODE_ENV === "production",
   corePath: "/ffmpeg-core/ffmpeg-core.js",
 });
 
@@ -35,25 +39,19 @@ function ActionButtons() {
     if (!selVisual || !selText || !selAudio) return;
 
     dispatch(setIsProcessing(true));
-    dispatch(
-      setNotification({
-        status: "info",
-        message: "Processing media. Please wait...",
-        isOpen: true,
-      }),
-    );
+    dispatch(setIsProcessingNotificationOpen(true));
     if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
     let data;
     ffmpeg.FS(
       "writeFile",
       selVisual,
-      await fetchFile(`${GS_URL}/${member}/${selVisual}`),
+      await fetchFile(buildUrl(`${member}/${selVisual}`)),
     );
     ffmpeg.FS(
       "writeFile",
       selText,
-      await fetchFile(`${GS_URL}/${member}/${selText}`),
+      await fetchFile(buildUrl(`${member}/${selText}`)),
     );
     ffmpeg.FS(
       "writeFile",
@@ -61,11 +59,16 @@ function ActionButtons() {
       await fetchFile(`${GS_URL}/${member}/${selAudio}`),
     );
 
+    const loopMethod = selVisual.includes("Moving")
+      ? ["-stream_loop", "-1"]
+      : ["-loop", "1"];
+    const stillTune = selVisual.includes("Moving")
+      ? []
+      : ["-tune", "stillimage"];
+
     try {
       await ffmpeg.run(
-        ...(selVisual.includes("Moving")
-          ? ["-stream_loop", "-1"]
-          : ["-loop", "1"]),
+        ...loopMethod,
         "-i",
         selVisual,
         "-i",
@@ -76,7 +79,7 @@ function ActionButtons() {
         "[0][1] overlay=0:0",
         "-c:v",
         "libx264",
-        ...(selVisual.includes("Moving") ? [] : ["-tune", "stillimage"]),
+        ...stillTune,
         "-c:a",
         "copy",
         "-map",
@@ -94,13 +97,6 @@ function ActionButtons() {
         value: 1,
       });
 
-      dispatch(
-        setNotification({
-          isOpen: false,
-          message: "",
-          status: "info",
-        }),
-      );
       dispatch(setIsProcessing(false));
 
       saveAs(
@@ -111,24 +107,7 @@ function ActionButtons() {
       console.error(err);
 
       dispatch(setIsProcessing(false));
-      dispatch(
-        setNotification({
-          isOpen: true,
-          status: "error",
-          message: "An error occurred. Please try again later.",
-        }),
-      );
-      setTimeout(
-        () =>
-          dispatch(
-            setNotification({
-              isOpen: false,
-              status: "info",
-              message: "",
-            }),
-          ),
-        5000,
-      );
+      dispatch(setIsErrorNotificationOpen(true));
 
       ReactGA.event({
         category: "souvenir",
@@ -136,6 +115,8 @@ function ActionButtons() {
         label: `${member} ${selVisual} ${selText} ${selAudio}`,
         value: 0,
       });
+    } finally {
+      dispatch(setIsProcessingNotificationOpen(false));
     }
   }
 

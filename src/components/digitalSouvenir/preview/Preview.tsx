@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 
 import {
@@ -6,12 +6,11 @@ import {
   PlayCircleOutline as PlayCircleOutlineIcon,
 } from "@mui/icons-material";
 
+import MemoMediaComponent from "@/components/digitalSouvenir/preview/MemoMediaComponent.tsx";
+import MemoText from "@/components/digitalSouvenir/preview/MemoText.tsx";
 import { useDispatch, useSelector } from "@/hooks/store.ts";
 import { setIsAudioPlaying, toggleIsAudioPlaying } from "@/store/appSlice.ts";
 import { Member } from "@/types/member.ts";
-
-import Image from "../common/Image.tsx";
-import Video from "../common/Video.tsx";
 
 const GS_URL = import.meta.env.VITE_GS_URL;
 
@@ -54,11 +53,6 @@ function Preview() {
     };
   }, [dispatch]);
 
-  const MediaComponent = useMemo(
-    () => (output?.includes("Moving") ? Video : Image),
-    [output],
-  );
-
   const handleClick = () => {
     if (isAudioPlaying) audioRef.current?.pause();
     else void audioRef.current?.play();
@@ -67,15 +61,12 @@ function Preview() {
 
   return (
     <div className="relative z-0">
-      {!selVisual ? null : (
-        <MediaComponent path={`${member}/${selVisual}`} className="w-full" />
-      )}
-      {!!selText && (
-        <Image
-          path={`${member}/${selText}`}
-          className="absolute left-0 top-0 w-full"
-        />
-      )}
+      <MemoMediaComponent
+        output={output}
+        member={member}
+        selVisual={selVisual}
+      />
+      <MemoText selText={selText} member={member} />
       {!!selAudio && !!audioRef.current && (
         <div className="absolute bottom-0 left-0">
           <button

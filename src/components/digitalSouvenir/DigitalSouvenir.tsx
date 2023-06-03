@@ -1,17 +1,18 @@
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 
+import ErrorNotification from "@/components/common/notification/ErrorNotification.tsx";
 import { memberIndex } from "@/constants.ts";
 import { useDispatch, useSelector } from "@/hooks/store.ts";
 import { Page, resetState } from "@/store/appSlice.ts";
 import { Member } from "@/types/member.ts";
 
-import GlobalNotification from "../common/GlobalNotification.tsx";
+import ProcessingNotification from "../common/notification/ProcessingNotification.tsx";
 import ActionButtons from "./ActionButtons.tsx";
 import AudioGallery from "./AudioGallery.tsx";
 import MiniGallery from "./MiniGallery.tsx";
-import Preview from "./Preview.tsx";
 import TextGallery from "./TextGallery.tsx";
+import Preview from "./preview/Preview.tsx";
 
 function DigitalSouvenir() {
   const dispatch = useDispatch();
@@ -90,7 +91,8 @@ function DigitalSouvenir() {
           </div>
         </div>
       </div>
-      <GlobalNotification />
+      <ProcessingNotification />
+      <ErrorNotification />
     </>
   );
 }
