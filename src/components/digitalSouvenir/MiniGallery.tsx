@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 
-import { useDispatch } from "@/hooks/store.ts";
-import { setOutput, setSelectedVisual } from "@/store/appSlice.ts";
+import { useZStore } from "@/store.ts";
 import { MediaType, Member } from "@/types/member.ts";
 
 import Image from "../common/Image.tsx";
@@ -15,7 +14,7 @@ interface MiniGalleryProps {
 }
 
 function MiniGallery({ header, media, type }: MiniGalleryProps) {
-  const dispatch = useDispatch();
+  const { setSelectedVisual, setOutput } = useZStore();
   const member = useParams().member as Member;
 
   const MediaComponent = useMemo(
@@ -24,8 +23,8 @@ function MiniGallery({ header, media, type }: MiniGalleryProps) {
   );
 
   const handleClick = (medium: string) => () => {
-    dispatch(setSelectedVisual(medium));
-    dispatch(setOutput(medium));
+    setSelectedVisual(medium);
+    setOutput(medium);
   };
 
   return (

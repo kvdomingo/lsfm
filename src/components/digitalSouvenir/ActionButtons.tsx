@@ -6,15 +6,7 @@ import { saveAs } from "file-saver";
 
 import { buildUrl } from "@/cloudinary.ts";
 import Button from "@/components/common/Button.tsx";
-import { useDispatch, useSelector } from "@/hooks/store.ts";
-import {
-  Page,
-  decreasePage,
-  increasePage,
-  setIsErrorNotificationOpen,
-  setIsProcessing,
-  setIsProcessingNotificationOpen,
-} from "@/store/appSlice.ts";
+import { Page, useZStore } from "@/store.ts";
 import { Member } from "@/types/member.ts";
 
 const GS_URL = import.meta.env.VITE_GS_URL;
@@ -27,19 +19,25 @@ const ffmpeg = createFFmpeg({
 });
 
 function ActionButtons() {
+  const {
+    page,
+    selectedVisual: selVisual,
+    selectedText: selText,
+    selectedAudio: selAudio,
+    isProcessing,
+    setIsProcessing,
+    setIsProcessingNotificationOpen,
+    setIsErrorNotificationOpen,
+    increasePage,
+    decreasePage,
+  } = useZStore();
   const member = useParams().member as Member;
-  const dispatch = useDispatch();
-  const page = useSelector(state => state.app.page);
-  const selVisual = useSelector(state => state.app.selectedVisual);
-  const selText = useSelector(state => state.app.selectedText);
-  const selAudio = useSelector(state => state.app.selectedAudio);
-  const isProcessing = useSelector(state => state.app.isProcessing);
 
   async function handleDownload() {
     if (!selVisual || !selText || !selAudio) return;
 
-    dispatch(setIsProcessing(true));
-    dispatch(setIsProcessingNotificationOpen(true));
+    setIsProcessing(true);
+    setIsProcessingNotificationOpen(true);
     if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
     let data;
@@ -97,7 +95,7 @@ function ActionButtons() {
         value: 1,
       });
 
-      dispatch(setIsProcessing(false));
+      setIsProcessing(false);
 
       saveAs(
         URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })),
@@ -106,8 +104,8 @@ function ActionButtons() {
     } catch (err) {
       console.error(err);
 
-      dispatch(setIsProcessing(false));
-      dispatch(setIsErrorNotificationOpen(true));
+      setIsProcessing(false);
+      setIsErrorNotificationOpen(true);
 
       ReactGA.event({
         category: "souvenir",
@@ -116,17 +114,17 @@ function ActionButtons() {
         value: 0,
       });
     } finally {
-      dispatch(setIsProcessingNotificationOpen(false));
+      setIsProcessingNotificationOpen(false);
     }
   }
 
   return (
     <div>
       {page > Page.VISUAL && (
-        <Button onClick={() => dispatch(decreasePage())}>Back</Button>
+        <Button onClick={() => decreasePage()}>Back</Button>
       )}
       {!!selVisual && page === Page.VISUAL && (
-        <Button onClick={() => dispatch(increasePage())}>
+        <Button onClick={() => increasePage()}>
           <b>Next</b>
         </Button>
       )}

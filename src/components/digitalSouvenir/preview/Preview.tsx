@@ -8,20 +8,22 @@ import {
 
 import MemoMediaComponent from "@/components/digitalSouvenir/preview/MemoMediaComponent.tsx";
 import MemoText from "@/components/digitalSouvenir/preview/MemoText.tsx";
-import { useDispatch, useSelector } from "@/hooks/store.ts";
-import { setIsAudioPlaying, toggleIsAudioPlaying } from "@/store/appSlice.ts";
+import { useZStore } from "@/store.ts";
 import { Member } from "@/types/member.ts";
 
 const GS_URL = import.meta.env.VITE_GS_URL;
 
 function Preview() {
-  const dispatch = useDispatch();
+  const {
+    selectedVisual: selVisual,
+    selectedText: selText,
+    selectedAudio: selAudio,
+    output,
+    isAudioPlaying,
+    setIsAudioPlaying,
+    toggleIsAudioPlaying,
+  } = useZStore();
   const member = useParams().member as Member;
-  const selVisual = useSelector(state => state.app.selectedVisual);
-  const selText = useSelector(state => state.app.selectedText);
-  const selAudio = useSelector(state => state.app.selectedAudio);
-  const output = useSelector(state => state.app.output);
-  const isAudioPlaying = useSelector(state => state.app.isAudioPlaying);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -29,34 +31,28 @@ function Preview() {
     const ref = audioRef.current;
     if (audioRef.current) {
       audioRef.current.addEventListener("ended", () =>
-        dispatch(setIsAudioPlaying(false)),
+        setIsAudioPlaying(false),
       );
       audioRef.current.addEventListener("playing", () =>
-        dispatch(setIsAudioPlaying(true)),
+        setIsAudioPlaying(true),
       );
       audioRef.current.addEventListener("pause", () =>
-        dispatch(setIsAudioPlaying(false)),
+        setIsAudioPlaying(false),
       );
     }
     return () => {
       if (ref) {
-        ref.removeEventListener("ended", () =>
-          dispatch(setIsAudioPlaying(false)),
-        );
-        ref.removeEventListener("playing", () =>
-          dispatch(setIsAudioPlaying(true)),
-        );
-        ref.removeEventListener("pause", () =>
-          dispatch(setIsAudioPlaying(false)),
-        );
+        ref.removeEventListener("ended", () => setIsAudioPlaying(false));
+        ref.removeEventListener("playing", () => setIsAudioPlaying(true));
+        ref.removeEventListener("pause", () => setIsAudioPlaying(false));
       }
     };
-  }, [dispatch]);
+  }, [setIsAudioPlaying]);
 
   const handleClick = () => {
     if (isAudioPlaying) audioRef.current?.pause();
-    else void audioRef.current?.play();
-    dispatch(toggleIsAudioPlaying());
+    else audioRef.current?.play();
+    toggleIsAudioPlaying();
   };
 
   return (

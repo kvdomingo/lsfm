@@ -2,14 +2,13 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 
 import { memberIndex } from "@/constants.ts";
-import { useDispatch } from "@/hooks/store.ts";
-import { setSelectedText } from "@/store/appSlice.ts";
+import { useZStore } from "@/store.ts";
 import { Member } from "@/types/member.ts";
 
 import Image from "../common/Image.tsx";
 
 function TextGallery() {
-  const dispatch = useDispatch();
+  const { setSelectedText } = useZStore();
   const member = useParams().member as Member;
 
   const textWhite = useMemo(
@@ -29,7 +28,7 @@ function TextGallery() {
   );
 
   const handleClick = (txt: string) => () => {
-    dispatch(setSelectedText(txt));
+    setSelectedText(txt);
   };
 
   return (
@@ -47,6 +46,7 @@ function TextGallery() {
         ))}
         {textBlack.map(txt => (
           <Image
+            key={txt}
             path={`${member}/${txt}`}
             className="w-full cursor-pointer bg-white"
             onClick={handleClick(txt)}

@@ -1,9 +1,9 @@
 import { Alert, CircularProgress, Snackbar } from "@mui/material";
 
-import { useSelector } from "@/hooks/store.ts";
+import { useZStore } from "@/store.ts";
 
 function ProcessingNotification() {
-  const { isProcessingNotificationOpen } = useSelector(state => state.app);
+  const { isProcessingNotificationOpen } = useZStore();
 
   return (
     <Snackbar

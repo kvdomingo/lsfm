@@ -1,13 +1,11 @@
 import { useMemo } from "react";
 
 import { audioText } from "@/constants.ts";
-import { useDispatch, useSelector } from "@/hooks/store.ts";
-import { setSelectedAudio } from "@/store/appSlice.ts";
+import { useZStore } from "@/store.ts";
 import { cn } from "@/utils";
 
 function AudioGallery() {
-  const dispatch = useDispatch();
-  const selAudio = useSelector(state => state.app.selectedAudio);
+  const { selectedAudio: selAudio, setSelectedAudio } = useZStore();
 
   const audio = useMemo(
     () =>
@@ -24,13 +22,15 @@ function AudioGallery() {
       <div className="grid grid-cols-7 gap-4 py-4">
         {audio.map((au, i) => (
           <div
+            key={au}
+            role="button"
             className={cn(
               "flex aspect-square cursor-pointer place-content-center place-items-center border-2 border-solid p-2 text-center shadow-none",
               {
                 "border-blue-500": selAudio === au,
               },
             )}
-            onClick={() => dispatch(setSelectedAudio(au))}
+            onClick={() => setSelectedAudio(au)}
           >
             <p>{audioText[i].toUpperCase().replace(/_/g, " ")}</p>
           </div>

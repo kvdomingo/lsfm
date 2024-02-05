@@ -1,17 +1,15 @@
 import { Alert, Snackbar } from "@mui/material";
 
-import { useDispatch, useSelector } from "@/hooks/store.ts";
-import { setIsErrorNotificationOpen } from "@/store/appSlice.ts";
+import { useZStore } from "@/store.ts";
 
 function ErrorNotification() {
-  const dispatch = useDispatch();
-  const { isErrorNotificationOpen } = useSelector(state => state.app);
+  const { isErrorNotificationOpen, setIsErrorNotificationOpen } = useZStore();
 
   return (
     <Snackbar
       open={isErrorNotificationOpen}
       autoHideDuration={5000}
-      onClose={() => dispatch(setIsErrorNotificationOpen(false))}
+      onClose={() => setIsErrorNotificationOpen(false)}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
     >
       <Alert severity="info" icon={false}>

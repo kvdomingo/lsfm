@@ -3,8 +3,7 @@ import { useParams } from "react-router-dom";
 
 import ErrorNotification from "@/components/common/notification/ErrorNotification.tsx";
 import { memberIndex } from "@/constants.ts";
-import { useDispatch, useSelector } from "@/hooks/store.ts";
-import { Page, resetState } from "@/store/appSlice.ts";
+import { Page, useZStore } from "@/store.ts";
 import { Member } from "@/types/member.ts";
 
 import ProcessingNotification from "../common/notification/ProcessingNotification.tsx";
@@ -15,15 +14,14 @@ import TextGallery from "./TextGallery.tsx";
 import Preview from "./preview/Preview.tsx";
 
 function DigitalSouvenir() {
-  const dispatch = useDispatch();
+  const { resetState, page } = useZStore();
   const member = useParams().member as Member;
-  const page = useSelector(state => state.app.page);
 
   useEffect(() => {
     return () => {
-      dispatch(resetState());
+      resetState();
     };
-  }, [dispatch]);
+  }, [resetState]);
 
   const visual = useMemo(
     () =>
