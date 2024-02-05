@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
+
+import { useParams } from "@tanstack/react-router";
 
 import ErrorNotification from "@/components/common/notification/ErrorNotification.tsx";
 import { memberIndex } from "@/constants.ts";
@@ -15,7 +16,7 @@ import Preview from "./preview/Preview.tsx";
 
 function DigitalSouvenir() {
   const { resetState, page } = useZStore();
-  const member = useParams().member as Member;
+  const { member }: { member: Member } = useParams({ strict: false });
 
   useEffect(() => {
     return () => {

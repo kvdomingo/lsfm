@@ -1,7 +1,7 @@
 import ReactGA from "react-ga4";
-import { useParams } from "react-router-dom";
 
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
+import { useParams } from "@tanstack/react-router";
 import { saveAs } from "file-saver";
 
 import { buildUrl } from "@/cloudinary.ts";
@@ -31,7 +31,7 @@ function ActionButtons() {
     increasePage,
     decreasePage,
   } = useZStore();
-  const member = useParams().member as Member;
+  const { member }: { member: Member } = useParams({ strict: false });
 
   async function handleDownload() {
     if (!selVisual || !selText || !selAudio) return;

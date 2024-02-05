@@ -1,5 +1,6 @@
 import ReactGA from "react-ga4";
-import { Link } from "react-router-dom";
+
+import { Link } from "@tanstack/react-router";
 
 import { members } from "@/constants.ts";
 
@@ -18,7 +19,11 @@ function CardDeck() {
     <div className="container mx-auto grid min-h-screen grid-cols-1 py-4 md:grid-cols-3">
       {members.map(member => (
         <div key={member} className="p-4">
-          <Link to={`/digitalsouvenir/${member}`} onClick={handleClick(member)}>
+          <Link
+            to="/digitalsouvenir/$member"
+            params={{ member }}
+            onClick={handleClick(member)}
+          >
             <Image
               path={`${member}/card.png`}
               className="w-full transition-all duration-300 ease-in-out hover:-translate-y-1"

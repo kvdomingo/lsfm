@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+
+import { useParams } from "@tanstack/react-router";
 
 import { memberIndex } from "@/constants.ts";
 import { useZStore } from "@/store.ts";
@@ -9,7 +10,7 @@ import Image from "../common/Image.tsx";
 
 function TextGallery() {
   const { setSelectedText } = useZStore();
-  const member = useParams().member as Member;
+  const { member }: { member: Member } = useParams({ strict: false });
 
   const textWhite = useMemo(
     () =>

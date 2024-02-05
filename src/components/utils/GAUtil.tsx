@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import ReactGA from "react-ga4";
-import { useLocation } from "react-router-dom";
+
+import { useRouterState } from "@tanstack/react-router";
 
 function GAUtil() {
-  const location = useLocation();
+  const { location } = useRouterState();
 
   useEffect(() => {
     ReactGA.initialize("G-8TM31QVBJC");

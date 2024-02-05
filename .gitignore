@@ -25,3 +25,4 @@ dist-ssr
 
 .vercel
 gcs-cors.json
+.env

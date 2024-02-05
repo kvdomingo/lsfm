@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
 
 import {
   PauseCircleOutline as PauseCircleOutlineIcon,
   PlayCircleOutline as PlayCircleOutlineIcon,
 } from "@mui/icons-material";
+import { useParams } from "@tanstack/react-router";
 
 import MemoMediaComponent from "@/components/digitalSouvenir/preview/MemoMediaComponent.tsx";
 import MemoText from "@/components/digitalSouvenir/preview/MemoText.tsx";
@@ -23,7 +23,7 @@ function Preview() {
     setIsAudioPlaying,
     toggleIsAudioPlaying,
   } = useZStore();
-  const member = useParams().member as Member;
+  const { member }: { member: Member } = useParams({ strict: false });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 

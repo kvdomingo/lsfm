@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+
+import { useParams } from "@tanstack/react-router";
 
 import { useZStore } from "@/store.ts";
 import { MediaType, Member } from "@/types/member.ts";
@@ -15,7 +16,7 @@ interface MiniGalleryProps {
 
 function MiniGallery({ header, media, type }: MiniGalleryProps) {
   const { setSelectedVisual, setOutput } = useZStore();
-  const member = useParams().member as Member;
+  const { member }: { member: Member } = useParams({ strict: false });
 
   const MediaComponent = useMemo(
     () => (type === "video" ? Video : Image),
