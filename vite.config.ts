@@ -1,6 +1,6 @@
+import * as path from "node:path";
 import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
-import * as path from "path";
 import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/

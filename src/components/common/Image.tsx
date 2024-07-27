@@ -1,9 +1,4 @@
-import {
-  AdvancedImage,
-  lazyload,
-  placeholder,
-  responsive,
-} from "@cloudinary/react";
+import { AdvancedImage, lazyload, placeholder, responsive } from "@cloudinary/react";
 import { scale } from "@cloudinary/url-gen/actions/resize";
 
 import { cld } from "@/cloudinary.ts";

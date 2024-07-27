@@ -11,10 +11,7 @@ function PreviewText({ selText, member }: PreviewImageProps) {
   return (
     <>
       {!!selText && (
-        <Image
-          path={`${member}/${selText}`}
-          className="absolute left-0 top-0 w-full"
-        />
+        <Image path={`${member}/${selText}`} className="absolute top-0 left-0 w-full" />
       )}
     </>
   );

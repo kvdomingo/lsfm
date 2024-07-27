@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 
 import { audioText } from "@/constants.ts";
-import { useZStore } from "@/store.ts";
+import { useStore } from "@/store.ts";
 import { cn } from "@/utils";
 
 function AudioGallery() {
-  const { selectedAudio: selAudio, setSelectedAudio } = useZStore();
+  const { selectedAudio: selAudio, setSelectedAudio } = useStore();
 
   const audio = useMemo(
     () =>
@@ -31,6 +31,7 @@ function AudioGallery() {
               },
             )}
             onClick={() => setSelectedAudio(au)}
+            onKeyDown={() => setSelectedAudio(au)}
           >
             <p>{audioText[i].toUpperCase().replace(/_/g, " ")}</p>
           </div>

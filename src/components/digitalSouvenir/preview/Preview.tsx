@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 
-import {
-  PauseCircleOutline as PauseCircleOutlineIcon,
-  PlayCircleOutline as PlayCircleOutlineIcon,
-} from "@mui/icons-material";
 import { useParams } from "@tanstack/react-router";
+import {
+  PauseCircle as PauseCircleOutlineIcon,
+  PlayCircle as PlayCircleOutlineIcon,
+} from "lucide-react";
 
 import MemoMediaComponent from "@/components/digitalSouvenir/preview/MemoMediaComponent.tsx";
 import MemoText from "@/components/digitalSouvenir/preview/MemoText.tsx";
-import { useZStore } from "@/store.ts";
-import { Member } from "@/types/member.ts";
+import { useStore } from "@/store.ts";
+import type { Member } from "@/types/member.ts";
 
 const GS_URL = import.meta.env.VITE_GS_URL;
 
@@ -22,7 +22,7 @@ function Preview() {
     isAudioPlaying,
     setIsAudioPlaying,
     toggleIsAudioPlaying,
-  } = useZStore();
+  } = useStore();
   const { member }: { member: Member } = useParams({ strict: false });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -30,15 +30,9 @@ function Preview() {
   useEffect(() => {
     const ref = audioRef.current;
     if (audioRef.current) {
-      audioRef.current.addEventListener("ended", () =>
-        setIsAudioPlaying(false),
-      );
-      audioRef.current.addEventListener("playing", () =>
-        setIsAudioPlaying(true),
-      );
-      audioRef.current.addEventListener("pause", () =>
-        setIsAudioPlaying(false),
-      );
+      audioRef.current.addEventListener("ended", () => setIsAudioPlaying(false));
+      audioRef.current.addEventListener("playing", () => setIsAudioPlaying(true));
+      audioRef.current.addEventListener("pause", () => setIsAudioPlaying(false));
     }
     return () => {
       if (ref) {
@@ -57,26 +51,24 @@ function Preview() {
 
   return (
     <div className="relative z-0">
-      <MemoMediaComponent
-        output={output}
-        member={member}
-        selVisual={selVisual}
-      />
+      <MemoMediaComponent output={output} member={member} selVisual={selVisual} />
       <MemoText selText={selText} member={member} />
       {!!selAudio && !!audioRef.current && (
         <div className="absolute bottom-0 left-0">
           <button
             onClick={handleClick}
             className="cursor-pointer border-none bg-transparent text-white opacity-75"
+            type="button"
           >
             {isAudioPlaying ? (
-              <PauseCircleOutlineIcon sx={{ fontSize: 100 }} />
+              <PauseCircleOutlineIcon size={100} />
             ) : (
-              <PlayCircleOutlineIcon sx={{ fontSize: 100 }} />
+              <PlayCircleOutlineIcon size={100} />
             )}
           </button>
         </div>
       )}
+      {/* biome-ignore lint/a11y/useMediaCaption: */}
       <audio
         preload="true"
         crossOrigin="anonymous"

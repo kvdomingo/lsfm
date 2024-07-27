@@ -5,13 +5,12 @@ import {
   createRootRoute,
 } from "@tanstack/react-router";
 
-import GAUtil from "@/components/utils/GAUtil.tsx";
+import { Toaster } from "@/components/ui/sonner.tsx";
 import TanStackRouterDevtools from "@/components/utils/RouterDevTools.tsx";
 
 export const Route = createRootRoute({
   component: () => (
     <>
-      {import.meta.env.PROD && <GAUtil />}
       <header className="py-4 text-center">
         <Link to="/">
           <img src="/logo_light.svg" alt="LE SSERAFIM" width={150} />
@@ -19,6 +18,7 @@ export const Route = createRootRoute({
       </header>
       <ScrollRestoration />
       <Outlet />
+      <Toaster position="bottom-right" />
       <TanStackRouterDevtools />
     </>
   ),

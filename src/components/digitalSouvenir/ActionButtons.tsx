@@ -1,13 +1,11 @@
-import ReactGA from "react-ga4";
-
+import { buildUrl } from "@/cloudinary.ts";
+import Button from "@/components/common/Button.tsx";
+import { Page, useStore } from "@/store.ts";
+import type { Member } from "@/types/member.ts";
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import { useParams } from "@tanstack/react-router";
 import { saveAs } from "file-saver";
-
-import { buildUrl } from "@/cloudinary.ts";
-import Button from "@/components/common/Button.tsx";
-import { Page, useZStore } from "@/store.ts";
-import { Member } from "@/types/member.ts";
+import { toast } from "sonner";
 
 const GS_URL = import.meta.env.VITE_GS_URL;
 
@@ -26,31 +24,27 @@ function ActionButtons() {
     selectedAudio: selAudio,
     isProcessing,
     setIsProcessing,
-    setIsProcessingNotificationOpen,
-    setIsErrorNotificationOpen,
     increasePage,
     decreasePage,
-  } = useZStore();
+  } = useStore();
   const { member }: { member: Member } = useParams({ strict: false });
 
   async function handleDownload() {
     if (!selVisual || !selText || !selAudio) return;
 
     setIsProcessing(true);
-    setIsProcessingNotificationOpen(true);
+    const processingToastId = toast.loading("Processing media. Please wait...", {
+      duration: Number.POSITIVE_INFINITY,
+    });
     if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-    let data;
+    let data: Uint8Array;
     ffmpeg.FS(
       "writeFile",
       selVisual,
       await fetchFile(buildUrl(`${member}/${selVisual}`)),
     );
-    ffmpeg.FS(
-      "writeFile",
-      selText,
-      await fetchFile(buildUrl(`${member}/${selText}`)),
-    );
+    ffmpeg.FS("writeFile", selText, await fetchFile(buildUrl(`${member}/${selText}`)));
     ffmpeg.FS(
       "writeFile",
       selAudio,
@@ -60,9 +54,7 @@ function ActionButtons() {
     const loopMethod = selVisual.includes("Moving")
       ? ["-stream_loop", "-1"]
       : ["-loop", "1"];
-    const stillTune = selVisual.includes("Moving")
-      ? []
-      : ["-tune", "stillimage"];
+    const stillTune = selVisual.includes("Moving") ? [] : ["-tune", "stillimage"];
 
     try {
       await ffmpeg.run(
@@ -88,14 +80,7 @@ function ActionButtons() {
 
       data = ffmpeg.FS("readFile", "out.mp4");
 
-      ReactGA.event({
-        category: "souvenir",
-        action: "download",
-        label: `${member} ${selVisual} ${selText} ${selAudio}`,
-        value: 1,
-      });
-
-      setIsProcessing(false);
+      if (processingToastId != null) toast.dismiss(processingToastId);
 
       saveAs(
         URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })),
@@ -103,26 +88,17 @@ function ActionButtons() {
       );
     } catch (err) {
       console.error(err);
-
       setIsProcessing(false);
-      setIsErrorNotificationOpen(true);
-
-      ReactGA.event({
-        category: "souvenir",
-        action: "download",
-        label: `${member} ${selVisual} ${selText} ${selAudio}`,
-        value: 0,
-      });
+      if (processingToastId != null) toast.dismiss(processingToastId);
+      toast.error("An error occurred. Please try again later.", { duration: 5000 });
     } finally {
-      setIsProcessingNotificationOpen(false);
+      if (processingToastId != null) toast.dismiss(processingToastId);
     }
   }
 
   return (
     <div>
-      {page > Page.VISUAL && (
-        <Button onClick={() => decreasePage()}>Back</Button>
-      )}
+      {page > Page.VISUAL && <Button onClick={() => decreasePage()}>Back</Button>}
       {!!selVisual && page === Page.VISUAL && (
         <Button onClick={() => increasePage()}>
           <b>Next</b>

@@ -3,13 +3,13 @@ import { useMemo } from "react";
 import { useParams } from "@tanstack/react-router";
 
 import { memberIndex } from "@/constants.ts";
-import { useZStore } from "@/store.ts";
-import { Member } from "@/types/member.ts";
+import { useStore } from "@/store.ts";
+import type { Member } from "@/types/member.ts";
 
 import Image from "../common/Image.tsx";
 
 function TextGallery() {
-  const { setSelectedText } = useZStore();
+  const { setSelectedText } = useStore();
   const { member }: { member: Member } = useParams({ strict: false });
 
   const textWhite = useMemo(
@@ -41,7 +41,7 @@ function TextGallery() {
           <Image
             key={txt}
             path={`${member}/${txt}`}
-            className="w-full cursor-pointer border border-solid border-white bg-[#080808]"
+            className="w-full cursor-pointer border border-white border-solid bg-[#080808]"
             onClick={handleClick(txt)}
           />
         ))}

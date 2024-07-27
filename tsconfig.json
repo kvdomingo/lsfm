@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "baseUrl": "src",
+    "baseUrl": ".",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     },
 
     /* Bundler mode */

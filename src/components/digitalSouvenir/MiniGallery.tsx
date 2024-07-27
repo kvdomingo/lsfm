@@ -2,8 +2,8 @@ import { useMemo } from "react";
 
 import { useParams } from "@tanstack/react-router";
 
-import { useZStore } from "@/store.ts";
-import { MediaType, Member } from "@/types/member.ts";
+import { useStore } from "@/store.ts";
+import type { MediaType, Member } from "@/types/member.ts";
 
 import Image from "../common/Image.tsx";
 import Video from "../common/Video.tsx";
@@ -15,13 +15,10 @@ interface MiniGalleryProps {
 }
 
 function MiniGallery({ header, media, type }: MiniGalleryProps) {
-  const { setSelectedVisual, setOutput } = useZStore();
+  const { setSelectedVisual, setOutput } = useStore();
   const { member }: { member: Member } = useParams({ strict: false });
 
-  const MediaComponent = useMemo(
-    () => (type === "video" ? Video : Image),
-    [type],
-  );
+  const MediaComponent = useMemo(() => (type === "video" ? Video : Image), [type]);
 
   const handleClick = (medium: string) => () => {
     setSelectedVisual(medium);
@@ -38,7 +35,7 @@ function MiniGallery({ header, media, type }: MiniGalleryProps) {
             key={medium}
             path={`${member}/${medium}`}
             onClick={handleClick(medium)}
-            className="h-[200px] cursor-pointer rounded-xl px-2 grayscale transition-all duration-300 ease-in-out hover:-translate-y-1"
+            className="hover:-translate-y-1 h-[200px] cursor-pointer rounded-xl px-2 grayscale transition-all duration-300 ease-in-out"
           />
         ))}
       </div>

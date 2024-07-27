@@ -1,4 +1,4 @@
-import { Member } from "./types/member.ts";
+import type { Member } from "./types/member.ts";
 
 export const members: Member[] = [
   "sakura",
