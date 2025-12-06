@@ -83,6 +83,7 @@ function ActionButtons() {
       if (processingToastId != null) toast.dismiss(processingToastId);
 
       saveAs(
+        // @ts-ignore: This has worked for years
         URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" })),
         `${member}-digital-souvenir.mp4`,
       );

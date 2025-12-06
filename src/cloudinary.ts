@@ -20,7 +20,6 @@ export const buildUrl = (path: string) => {
   const _path = `lsfm/assets/${path}`;
   if (path.includes("Moving")) {
     return cld.video(_path).toURL();
-  } else {
-    return cld.image(_path).toURL();
   }
+  return cld.image(_path).toURL();
 };
